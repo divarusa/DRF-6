@@ -143,3 +143,15 @@ GOOGLE_REDIRECT_URI = config(
 )
 REDIS_HOST = "127.0.0.1"
 REDIS_PORT = 6379
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    "clear-expired-data-every-day": {
+        "task": "users.tasks.clear_expired_data",
+        "schedule": crontab(hour=0, minute=0),
+    },
+}

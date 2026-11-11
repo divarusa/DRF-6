@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import CustomUser
 from .services import save_confirmation_code
+from .tasks import process_user_data, send_welcome_email
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -20,6 +21,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         code = str(random.randint(1000, 9999))
         save_confirmation_code(user.email, code)
+        process_user_data.delay(user.id)
+        send_welcome_email.delay(user.email)
 
         return user
 
