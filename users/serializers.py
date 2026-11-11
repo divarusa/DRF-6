@@ -1,13 +1,46 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import CustomUser
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(required=True)
+    phone_number = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, min_length=8)
 
     class Meta:
         model = CustomUser
         fields = ["email", "phone_number", "password"]
 
     def create(self, validated_data):
-        return CustomUser.objects.create_user(**validated_data)
+        password = validated_data.pop("password")
+        return CustomUser.objects.create_user(password=password, **validated_data)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @staticmethod
+    def _serialize_birthdate(user):
+        birthdate = getattr(user, "birthdate", None)
+        if birthdate is None:
+            return None
+        return (
+            birthdate.isoformat() if hasattr(birthdate, "isoformat") else str(birthdate)
+        )
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["user_id"] = user.id
+        token["email"] = getattr(user, "email", None)
+        token["phone_number"] = getattr(user, "phone_number", None)
+        token["birthdate"] = cls._serialize_birthdate(user)
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data["user_id"] = self.user.id
+        data["email"] = getattr(self.user, "email", None)
+        data["phone_number"] = getattr(self.user, "phone_number", None)
+        data["birthdate"] = self._serialize_birthdate(self.user)
+        return data
