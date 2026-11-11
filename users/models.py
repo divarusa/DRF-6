@@ -46,6 +46,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     birthdate = models.DateField(blank=True, null=True)
+    registration_source = models.CharField(max_length=50, default="local")
 
     groups = models.ManyToManyField(
         "auth.Group",
