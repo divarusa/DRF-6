@@ -1,7 +1,8 @@
+import random
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 from .models import CustomUser
+from .services import save_confirmation_code
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -15,10 +16,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password")
-        return CustomUser.objects.create_user(password=password, **validated_data)
+        user = CustomUser.objects.create_user(password=password, **validated_data)
+
+        code = str(random.randint(1000, 9999))
+        save_confirmation_code(user.email, code)
+
+        return user
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+
     @staticmethod
     def _serialize_birthdate(user):
         birthdate = getattr(user, "birthdate", None)

@@ -141,3 +141,5 @@ GOOGLE_CLIENT_SECRET = config("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = config(
     "GOOGLE_REDIRECT_URI", default="http://127.0.0.1:8000/api/users/google/callback/"
 )
+REDIS_HOST = "127.0.0.1"
+REDIS_PORT = 6379

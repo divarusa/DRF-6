@@ -4,6 +4,8 @@ import json
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from rest_framework.exceptions import AuthenticationFailed
+import redis
+from django.conf import settings
 
 User = get_user_model()
 
@@ -62,3 +64,28 @@ def google_validate_and_get_user_data(code, client_id, client_secret, redirect_u
     user.save()
 
     return user
+
+
+redis_client = redis.Redis(
+    host=getattr(settings, "REDIS_HOST", "127.0.0.1"),
+    port=getattr(settings, "REDIS_PORT", 6379),
+    decode_responses=True,
+)
+
+
+def save_confirmation_code(email, code):
+  redis_client.set(f"code:{email}", code, ex=300)
+
+
+def verify_confirmation_code(email, entered_code):
+  redis_key = f"code:{email}"
+  stored_code = redis_client.get(redis_key)
+
+  if not stored_code:
+    return False
+
+  if str(stored_code) == str(entered_code):
+    redis_client.delete(redis_key)
+    return True
+
+  return False
