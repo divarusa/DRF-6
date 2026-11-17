@@ -1,0 +1,34 @@
+services:
+  redis:
+    image: redis:7-alpine
+
+  web:
+    build: .
+    command: sh -c «python manage.py migrate && python manage.py runserver 0.0.0.0:8000»
+    env_file: .env
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    env_file: .env
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - web
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info
+    env_file: .env
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - web

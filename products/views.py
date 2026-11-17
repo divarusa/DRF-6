@@ -7,6 +7,8 @@ from .serializers import ProductSerializer
 from common.validators import validate_user_age
 
 
+
+
 class IsModerator(BasePermission):
     def has_permission(self, request, view):
         return bool(
